@@ -1,0 +1,361 @@
+﻿
+@{
+    Layout = null;
+    ViewBag.Title = "Index1";
+}
+<script src="~/Scripts/jquery-1.10.2.min.js"></script>
+<script src="~/Scripts/knockout-3.4.0.js"></script>
+<script src="https://cdn.static.runoob.com/libs/angular.js/1.4.6/angular.min.js"></script>
+<script src="~/Scripts/bootstrap.min.js"></script>
+<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+
+<tr>
+    <td>
+        <input class="btn btn-primary" width="100" data-toggle="modal" data-target="#myModal" type="button" value="添加" />
+    </td>
+    <td>
+        <input type="text" style="" data-bind="value:seach" />
+    </td>
+    <td>
+        <select type="text" id="UserSelect" name="UserName" style="width:75px" data-bind="value: SelectValues">
+            <option value="Name">Name</option>
+            <option value="Sex">Sex</option>
+            <option value="Birthday">Birthday</option>
+            <option value="Mobile">Mobile</option>
+            <option value="Email">Email</option>
+            <option value="Address">Address</option>
+        </select>
+    </td>
+    <td>
+        <input type="button" data-bind="click:SeachUser" value="搜索" class="btn btn-primary">
+    </td>
+    <td>
+        <input type="button" data-bind="click:deletes" value="删除" class="btn btn-primary">
+    </td>
+    <td>
+        @*<input type="button" data-bind="" value="全选" class="btn btn-primary">*@
+    </td>
+</tr>
+<table class="table">
+    <thead class="table-bordered">
+        <tr style="text-align: left">
+            <th><input type="checkbox" data-bind="checked: selectall">check</th>
+            <th>Name</th>
+            <th>Sex</th>
+            <th>Birthday</th>
+            <th>Mobile</th>
+            <th>Email</th>
+            <th>Address</th>
+        </tr>
+    </thead>
+    <tbody class="table-bordered" data-bind="foreach: User">
+        <tr>
+            <td><input type="checkbox" name="check" data-bind="checked:Check"></td>
+            <td data-bind="text:Name"></td>
+            <td data-bind="text:Sex"></td>
+            <td data-bind="text:Birthday"></td>
+            <td data-bind="text:Mobile"></td>
+            <td data-bind="text:Email"></td>
+            <td data-bind="text:Address"></td>
+        </tr>
+    </tbody>
+</table>
+<div class="col-sm-6">
+    <div class="dataTables_paginate paging_simple_numbers" id="dataTables-example_paginate">
+        <ul class="pagination">
+            <li class="paginate_button previous next" aria-controls="dataTables-example" tabindex="0" id="dataTables-example_previous">
+                <a href="#" data-bind="click: pagingf">首页</a>
+            </li>
+            <li class="paginate_button previous next" aria-controls="dataTables-example" tabindex="0" id="dataTables-example_previous">
+                <a href="#" data-bind="click: pagingup">上一页</a>
+            </li>
+            <li class="paginate_button next" aria-controls="dataTables-example" tabindex="0" id="dataTables-example_next">
+                <a href="#" data-bind="click: pagingnext">下一页</a>
+            </li>
+            <li class="paginate_button previous next" aria-controls="dataTables-example" tabindex="0" id="dataTables-example_previous">
+                <a href="#" data-bind="click: pagingl">末页</a>
+            </li>
+            <li class="paginate_button next" aria-controls="dataTables-example" tabindex="0" id="dataTables-example_next">
+                <a>
+                    <!--ko text:NowPage --> <!--/ko-->/<!--ko text:AllPage --><!--/ko-->页
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title" id="myModalLabel">添加</h4>
+            </div>
+
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><input  type="text" data-bind="value:Name" /></td>
+                </tr>
+                <tr>
+                    <td>Sex:</td>
+                    <td><input type="text" data-bind="value:Sex" /></td>
+                </tr>
+                <tr>
+                    <td>Birthday:</td>
+                    <td><input type="text" data-bind="value:Birthday" /></td>
+                </tr>
+                <tr>
+                    <td>Mobile:</td>
+                    <td><input type="text" data-bind="value:Mobile" /></td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td><input type="text" data-bind="value:Email" /></td>
+                </tr>
+                <tr>
+                    <td>Address:</td>
+                    <td><input type="text" data-bind="value:Address" /></td>
+                </tr>
+            </table>
+            <div class="modal-footer">
+                <button type="button" data-bind="click:AddUser" class="btn btn-primary">
+                    添加
+                </button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div>
+
+<script>
+    $(function () {
+        var s = new Array();
+        var viewModel = {
+            selectall: ko.observable(false),
+            User: ko.observableArray(),
+            Name: ko.observable(""),
+            Sex: ko.observable(""),
+            Birthday: ko.observable(""),
+            Mobile: ko.observable(""),
+            Email: ko.observable(""),
+            AllPage: ko.observable(),
+            NowPage: ko.observable(),
+            seach: ko.observable(""),
+            SelectValues: ko.observable(""),
+            Address: ko.observable(""),
+            Check: ko.observable(false),
+            pagingup: function () {//第一页
+                var NowPageN = viewModel.NowPage() - 1;
+                if (NowPageN <= 0) {
+                    NowPageN = 0;
+                }
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    data: { type: viewModel.SelectValues, value: viewModel.seach, NowPage: NowPageN },
+                    success: function (data) {
+                         s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+            },
+            all: function  (nvalue) { //subscribe是监控属性显示订阅,通过nvalue判断全选是选中，还是没选中
+                if (nvalue) {                               //如果选中
+                     s = viewModel.User();
+                     viewModel.User([]);
+                    var a=0;
+                    for (var i = 0; i < s.length; i++) {
+                        if (s[i].Check == true) {
+                            a++
+                        }//则将列表中的check设置为true
+                        s[i].Check = true;
+
+                    }
+                    if (a == i)
+                    {
+                        for (var i = 0; i < s.length; i++) {
+                            s[i].Check = false;              //则将列表中的check设置为false
+                        }
+                    }
+                    viewModel.User(s);
+                } 
+            },
+            pagingf: function () {//最后一页
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    data: { type: viewModel.SelectValues, value: viewModel.seach, NowPage: 1 },
+                    success: function (data) {
+                         s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+            },
+            pagingl: function () {
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    data: { type: viewModel.SelectValues, value: viewModel.seach, NowPage: viewModel.AllPage },
+                    success: function (data) {
+                         s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+            },
+            pagingnext: function () {//下一页
+                var NowPageN = viewModel.NowPage() + 1;
+                if (NowPageN > viewModel.AllPage()) {
+                    NowPageN = NowPageN - 1;
+                }
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    data: { type: viewModel.SelectValues, value: viewModel.seach, NowPage: NowPageN },
+                    success: function (data) {
+                         s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+            },
+
+            AddUser: function () {//添加用户
+                $.ajax({
+                    url: "/api/Contents/",
+                    data: { Name: viewModel.Name, Sex: viewModel.Sex, Birthday: viewModel.Birthday, Mobile: viewModel.Mobile, Email: viewModel.Email, Address: viewModel.Address },
+                    type: "Put",
+                    success: viewModel.Update
+                });
+            },
+            add: function () {
+
+            },
+            SeachUser: function () {//搜索列表
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    data: { type: viewModel.SelectValues, value: viewModel.seach,NowPage:0 },
+                    success: function (data) {
+                         s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+            },
+            deletes: function () {//删除列表
+                for (var i = 0; i < s.length; i++) {
+                    if (s[i].Check == true) {
+                        var inputID = s[i].USRId;
+                        $.ajax({
+                            url: "/api/Contents/"+inputID,
+                            type: "DELETE",
+                            success: viewModel.Update
+                        });
+                    }
+                }
+            },
+            Update: function () {//更新列表
+                $.ajax({
+                    url: "/api/Contents",
+                    type: "get",
+                    success: function (data) {
+                        s = new Array();
+                        for (var i = 0; i < data.list.length; i++) {
+                            s.push(data.list[i]);
+                        }
+                        viewModel.User(data.list);
+                        viewModel.AllPage(data.AllPage);
+                        viewModel.NowPage(data.NowPage);
+                        viewModel.Name("");
+                        viewModel.Address(""); 
+                        viewModel.Birthday("");
+                        viewModel.Sex("");
+                        viewModel.Email("");
+                        viewModel.Mobile("");
+                    },
+                    error: function () {
+                        alert("错误");
+                    }
+                });
+                $('#myModal').modal('hide');
+            }
+        }
+        ko.applyBindings(viewModel);
+        viewModel.selectall.subscribe(function (nvalue) { //subscribe是监控属性显示订阅,通过nvalue判断全选是选中，还是没选中
+            if (nvalue) {                               //如果选中
+                var s = viewModel.User();
+                viewModel.User([]);
+                for (var i = 0; i < s.length; i++) {
+                    s[i].Check = true;                //则将列表中的check设置为true
+                }
+                viewModel.User(s);
+            } else {                                  //如果没选
+                var s = viewModel.User();
+                viewModel.User([]);
+                for (var i = 0; i < s.length; i++) {
+                    s[i].Check = false;              //则将列表中的check设置为false
+                }
+                viewModel.User(s);
+            }
+        });
+        var app = angular.module('myApp', []);
+        app.controller('siteCtrl', function ($scope, $http) {
+            $http.get("/api/Contents")
+            .success(function (response) { $scope.names = response.sites; });
+        });
+        //$.ajax({
+        //    url: "/api/Contents",
+        //    type: "get",
+        //    success: function (data) {
+        //        for (var i = 0; i < data.list.length; i++) {
+        //            s.push(data.list[i]);
+        //        }
+        //        viewModel.User(data.list);
+        //        viewModel.AllPage(data.AllPage);
+        //        viewModel.NowPage(data.NowPage);
+        //    },
+        //    error: function () {
+        //        alert("错误");
+        //    }
+        //});
+    })
+</script>
